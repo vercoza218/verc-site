@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verc — Escale a Torre. Só os dignos sobrevivem.</title>
+<meta name="description" content="Verc — escale a Torre. Jogo grátis pra Windows. Só os dignos sobrevivem." />
+<meta name="theme-color" content="#0a0a12" />
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+
+<!-- Open Graph / preview em links (Discord, WhatsApp, etc.) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Verc — Escale a Torre" />
+<meta property="og:description" content="Escale a Torre. Só os dignos sobrevivem. Baixe grátis." />
+<meta property="og:image" content="https://vercmmorpg.com/assets/logo.png" />
+<meta property="og:url" content="https://vercmmorpg.com/" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --gold: #f1c40f;
+    --gold-dim: #c9a227;
+    --purple: #9b59b6;
+    --ice: #5dade2;
+    --bg: #0a0a12;
+    --panel: #15151f;
+    --panel-2: #1d1d2b;
+    --line: #33334a;
+    --text: #ece9e1;
+    --muted: #9a97ad;
+    --px: 'Press Start 2P', monospace;
+    --body: 'VT323', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 22px;
+    line-height: 1.45;
+    overflow-x: hidden;
+    image-rendering: pixelated;
+  }
+
+  img { image-rendering: pixelated; display: block; }
+
+  a { color: var(--gold); text-decoration: none; }
+
+  /* starfield + void background */
+  .void {
+    position: fixed; inset: 0; z-index: -2;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1a1d33 0%, #0c0c16 45%, var(--bg) 80%);
+  }
+  .stars, .stars2 {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  }
+  .stars {
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, #ffffff88, transparent),
+      radial-gradient(1px 1px at 70% 20%, #ffffff66, transparent),
+      radial-gradient(1px 1px at 40% 70%, #fff5cc88, transparent),
+      radial-gradient(2px 2px at 85% 60%, #ffffff55, transparent),
+      radial-gradient(1px 1px at 15% 85%, #ffffff66, transparent),
+      radial-gradient(1px 1px at 90% 90%, #ffffff55, transparent),
+      radial-gradient(1px 1px at 55% 45%, #cfe8ff77, transparent);
+    background-repeat: no-repeat;
+    animation: twinkle 4s ease-in-out infinite alternate;
+  }
+  .stars2 {
+    background-image:
+      radial-gradient(1px 1px at 33% 12%, #ffffff55, transparent),
+      radial-gradient(1px 1px at 60% 80%, #fff2c455, transparent),
+      radial-gradient(1px 1px at 78% 35%, #ffffff44, transparent),
+      radial-gradient(1px 1px at 8% 55%, #cfe8ff55, transparent);
+    background-repeat: no-repeat;
+    animation: twinkle 6s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes twinkle { from { opacity: .35; } to { opacity: .9; } }
+
+  /* subtle CRT scanlines */
+  .scanlines {
+    position: fixed; inset: 0; z-index: 50; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.16) 2px 3px);
+    mix-blend-mode: multiply; opacity: .35;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---- top bar ---- */
+  header {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(10,10,18,.82);
+    backdrop-filter: blur(6px);
+    border-bottom: 2px solid var(--line);
+  }
+  header .wrap { display: flex; align-items: center; gap: 14px; height: 60px; }
+  header img.brand-logo { width: 34px; height: 34px; }
+  header .brand { font-family: var(--px); font-size: 14px; color: var(--gold); letter-spacing: 1px; }
+  header nav { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  header nav a {
+    font-family: var(--px); font-size: 9px; color: var(--text);
+    padding: 9px 12px; border: 2px solid var(--line); border-radius: 4px;
+  }
+  header nav a:hover { border-color: var(--gold); color: var(--gold); }
+  header nav a.dl { background: var(--gold); color: #1a1405; border-color: var(--gold); }
+  header nav a.dl:hover { background: #ffd633; }
+
+  /* ---- language flags (espelha as bandeiras do jogo) ---- */
+  .lang { display: flex; align-items: center; gap: 6px; margin-right: 4px; }
+  .lang button {
+    background: none; border: 0; padding: 0; cursor: pointer;
+    width: 32px; height: 24px; opacity: .5; line-height: 0;
+    transition: opacity .12s ease, transform .12s ease;
+    image-rendering: pixelated;
+  }
+  .lang button img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+  .lang button:hover { opacity: .85; }
+  .lang button.active { opacity: 1; transform: scale(1.12); }
+
+  /* ---- hero ---- */
+  .hero { text-align: center; padding: 72px 0 56px; }
+  .hero .logo {
+    width: 168px; height: 168px; margin: 0 auto 8px;
+    filter: drop-shadow(0 0 26px rgba(241,196,15,.28));
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .hero h1 {
+    font-family: var(--px); font-size: 56px; color: var(--gold);
+    letter-spacing: 6px; line-height: 1;
+    text-shadow: 0 0 22px rgba(241,196,15,.45), 4px 4px 0 #000;
+  }
+  .hero .tag {
+    font-size: 30px; color: var(--text); margin-top: 16px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .hero .sub { font-size: 22px; color: var(--muted); margin-top: 8px; max-width: 620px; margin-inline: auto; }
+
+  .cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+  .btn {
+    font-family: var(--px); font-size: 13px; padding: 18px 26px;
+    border: 3px solid var(--gold); border-radius: 6px; cursor: pointer;
+    display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: transform .08s ease, box-shadow .15s ease, background .15s ease;
+    box-shadow: 0 4px 0 #00000088; text-align: center;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #00000088; }
+  .btn-primary { background: var(--gold); color: #1a1405; text-shadow: none; }
+  .btn-primary:hover { background: #ffd94d; box-shadow: 0 4px 26px rgba(241,196,15,.55); }
+  .btn-discord { background: #5865F2; color: #fff; border-color: #5865F2; }
+  .btn-discord:hover { background: #6b78ff; box-shadow: 0 4px 22px rgba(88,101,242,.5); }
+  .btn .small { display:block; font-size: 8px; opacity: .8; font-family: var(--px); }
+  .os-note { margin-top: 16px; font-size: 19px; color: var(--muted); }
+  .os-note b { color: var(--text); }
+
+  /* ---- sections ---- */
+  section { padding: 56px 0; }
+  .section-title {
+    font-family: var(--px); font-size: 20px; color: var(--gold);
+    text-align: center; letter-spacing: 1px; margin-bottom: 8px;
+    text-shadow: 3px 3px 0 #000;
+  }
+  .section-sub { text-align: center; color: var(--muted); font-size: 22px; margin-bottom: 34px; }
+
+  .lore {
+    max-width: 760px; margin: 0 auto; text-align: center; font-size: 25px;
+    color: var(--text); background: var(--panel); border: 2px solid var(--line);
+    border-radius: 8px; padding: 28px 30px;
+  }
+  .lore b { color: var(--gold); }
+
+  /* ---- floors grid ---- */
+  .floors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .floor {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 8px;
+    overflow: hidden; transition: transform .12s ease, border-color .12s ease;
+  }
+  .floor:hover { transform: translateY(-5px); border-color: var(--gold); }
+  .floor .pic { position: relative; aspect-ratio: 400/224; background: #000; overflow: hidden; }
+  .floor .pic img { width: 100%; height: 100%; object-fit: cover; }
+  .floor .badge {
+    position: absolute; top: 8px; left: 8px;
+    font-family: var(--px); font-size: 9px; color: #1a1405; background: var(--gold);
+    padding: 5px 8px; border-radius: 4px;
+  }
+  .floor .name { padding: 12px 14px; font-size: 23px; }
+  .floor .name span { display: block; font-size: 18px; color: var(--muted); }
+  .floor.soon .pic { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #18141f, #0b0b14); }
+  .floor.soon .qmark { font-family: var(--px); font-size: 60px; color: var(--gold); opacity: .5; text-shadow: 0 0 20px rgba(241,196,15,.3); }
+  .floor.soon:hover { border-color: var(--purple); }
+  .floor.soon .name span { color: var(--gold); opacity: .85; }
+
+  /* ---- features ---- */
+  .feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feat {
+    background: var(--panel); border: 2px solid var(--line); border-left: 4px solid var(--gold);
+    border-radius: 8px; padding: 20px 22px;
+  }
+  .feat .ico { font-size: 34px; line-height: 1; margin-bottom: 10px; }
+  .feat h3 { font-family: var(--px); font-size: 12px; color: var(--gold); margin-bottom: 10px; line-height: 1.5; }
+  .feat p { font-size: 21px; color: var(--text); }
+
+  /* ---- reqs ---- */
+  .reqs { max-width: 620px; margin: 0 auto; background: var(--panel); border: 2px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .reqs .row { display: flex; justify-content: space-between; padding: 14px 22px; border-bottom: 1px solid var(--line); font-size: 22px; }
+  .reqs .row:last-child { border-bottom: 0; }
+  .reqs .row .k { color: var(--muted); }
+  .reqs .row .v { color: var(--text); }
+
+  /* ---- download band ---- */
+  .band {
+    text-align: center; background: linear-gradient(180deg, #16131f, #0c0c16);
+    border-top: 2px solid var(--line); border-bottom: 2px solid var(--line);
+  }
+  .band h2 { font-family: var(--px); font-size: 22px; color: var(--gold); margin-bottom: 18px; text-shadow: 3px 3px 0 #000; }
+
+  /* ---- footer ---- */
+  footer { padding: 40px 0 56px; text-align: center; color: var(--muted); font-size: 20px; }
+  footer .links { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+  footer .links a { font-family: var(--px); font-size: 10px; }
+  footer .made { font-size: 18px; }
+
+  @media (max-width: 760px) {
+    .hero h1 { font-size: 38px; }
+    .floors, .feats { grid-template-columns: 1fr 1fr; }
+    header .brand { display: none; }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 20px; }
+    .floors, .feats { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 30px; letter-spacing: 3px; }
+    .hero .logo { width: 128px; height: 128px; }
+    .lang button { width: 28px; height: 21px; }
+  }
+</style>
+</head>
+<body>
+  <div class="void"></div>
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="scanlines"></div>
+
+  <header>
+    <div class="wrap">
+      <img class="brand-logo" src="assets/logo.png" alt="Verc" />
+      <span class="brand">VERC</span>
+      <nav>
+        <div class="lang" aria-label="Idioma / Language / Idioma">
+          <button data-lang="pt" title="Português"><img src="assets/flags/br.png" alt="Português" /></button>
+          <button data-lang="en" title="English"><img src="assets/flags/us.png" alt="English" /></button>
+          <button data-lang="es" title="Español"><img src="assets/flags/es.png" alt="Español" /></button>
+        </div>
+        <a href="https://discord.gg/DhZyJXz3EM" target="_blank" rel="noopener">Discord</a>
+        <a class="dl" href="https://github.com/vercoza218/verc-releases/releases/latest/download/Verc-windows.zip" data-i18n="nav_download">Baixar</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="wrap">
+      <img class="logo" src="assets/logo.png" alt="Logo da Torre Verc" />
+      <h1>VERC</h1>
+      <p class="tag" data-i18n="hero_tag">Só os dignos sobrevivem.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/vercoza218/verc-releases/releases/latest/download/Verc-windows.zip">
+          <span data-i18n="hero_btn_dl">⬇ BAIXAR GRÁTIS</span> <span class="small" data-i18n="hero_btn_dl_sub">Windows · ~36 MB</span>
+        </a>
+        <a class="btn btn-discord" href="https://discord.gg/DhZyJXz3EM" target="_blank" rel="noopener">
+          <span data-i18n="hero_btn_dc">⚔ ENTRAR NO DISCORD</span> <span class="small" data-i18n="hero_btn_dc_sub">comunidade · ranking</span>
+        </a>
+      </div>
+      <p class="os-note" data-i18n-html="hero_osnote">Feito para <b>Windows 10/11</b>. O launcher atualiza o jogo sozinho a cada nova versão.</p>
+    </div>
+  </div>
+
+  <!-- LORE -->
+  <section>
+    <div class="wrap">
+      <p class="lore" data-i18n-html="lore">
+        Forças desconhecidas trouxeram toda a humanidade da Terra para dentro da <b>Torre Verc</b>. Pra salvar a espécie humana e entender o mistério da torre, os jogadores precisam alcançar o topo, se é que existe um..
+      </p>
+    </div>
+  </section>
+
+  <!-- FLOORS -->
+  <section>
+    <div class="wrap">
+      <h2 class="section-title" data-i18n="floors_title">Escale a Torre</h2>
+      <p class="section-sub" data-i18n="floors_sub">Cada zona com estética, mobs e chefes próprios — e mais sendo construído.</p>
+      <div class="floors">
+        <div class="floor">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 0</span><img src="assets/floor_000.png" alt="Saguão da Torre" /></div>
+          <div class="name"><span data-i18n="floor0_name" style="display:inline;font-size:inherit;color:inherit">Saguão da Torre</span> <span data-i18n="floor0_sub">O início da jornada</span></div>
+        </div>
+        <div class="floor">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 1</span><img src="assets/floor_001.png" alt="Floresta de Olin" /></div>
+          <div class="name"><span data-i18n="floor1_name" style="display:inline;font-size:inherit;color:inherit">Floresta de Olin</span> <span data-i18n="floor1_sub">Slimes, morcegos e ursos</span></div>
+        </div>
+        <div class="floor">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 2</span><img src="assets/floor_002.png" alt="Floresta Sombria" /></div>
+          <div class="name"><span data-i18n="floor2_name" style="display:inline;font-size:inherit;color:inherit">Floresta Sombria</span> <span data-i18n="floor2_sub">Boss: Tecelã-Mãe</span></div>
+        </div>
+        <div class="floor">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 3</span><img src="assets/floor_003.png" alt="Deserto" /></div>
+          <div class="name"><span data-i18n="floor3_name" style="display:inline;font-size:inherit;color:inherit">Deserto Vidro</span> <span data-i18n="floor3_sub">Pirâmides e mini-chefes</span></div>
+        </div>
+        <div class="floor">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 4</span><img src="assets/floor_004.png" alt="Biofrost" /></div>
+          <div class="name"><span data-i18n="floor4_name" style="display:inline;font-size:inherit;color:inherit">Biofrost</span> <span data-i18n="floor4_sub">Boss: Dragão de Gelo</span></div>
+        </div>
+        <div class="floor">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 5</span><img src="assets/floor_005.png" alt="Bastião de Gelo" /></div>
+          <div class="name"><span data-i18n="floor5_name" style="display:inline;font-size:inherit;color:inherit">Bastião de Gelo</span> <span data-i18n="floor5_sub">Capital · zona segura</span></div>
+        </div>
+        <div class="floor soon">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 6</span><div class="qmark">?</div></div>
+          <div class="name">??? <span data-i18n="floor_soon">Em breve..</span></div>
+        </div>
+        <div class="floor soon">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 7</span><div class="qmark">?</div></div>
+          <div class="name">??? <span data-i18n="floor_soon">Em breve..</span></div>
+        </div>
+        <div class="floor soon">
+          <div class="pic"><span class="badge"><span data-i18n="floor_word">ANDAR</span> 8</span><div class="qmark">?</div></div>
+          <div class="name">??? <span data-i18n="floor_soon">Em breve..</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD BAND -->
+  <section class="band">
+    <div class="wrap">
+      <h2 data-i18n="band_title">Pronto pra escalar?</h2>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/vercoza218/verc-releases/releases/latest/download/Verc-windows.zip" data-i18n="band_btn_dl">⬇ BAIXAR O VERC</a>
+        <a class="btn btn-discord" href="https://discord.gg/DhZyJXz3EM" target="_blank" rel="noopener" data-i18n="band_btn_dc">⚔ DISCORD</a>
+      </div>
+      <p class="os-note" style="margin-top:22px;" data-i18n-html="band_osnote">Baixe o <b>.zip</b>, extraia e rode <b>Verc.exe</b>. Crie sua conta com e-mail e comece a subir.</p>
+    </div>
+  </section>
+
+  <!-- REQS -->
+  <section>
+    <div class="wrap">
+      <h2 class="section-title" data-i18n="reqs_title">Requisitos</h2>
+      <p class="section-sub" data-i18n="reqs_sub">Vai rodar.</p>
+      <div class="reqs">
+        <div class="row"><span class="k" data-i18n="req_system_k">Sistema</span><span class="v" data-i18n="req_system_v">Windows 10 / 11 (64-bit)</span></div>
+        <div class="row"><span class="k" data-i18n="req_proc_k">Processador</span><span class="v" data-i18n="req_proc_v">Dual-core 2.0 GHz+</span></div>
+        <div class="row"><span class="k" data-i18n="req_mem_k">Memória</span><span class="v" data-i18n="req_mem_v">2 GB RAM</span></div>
+        <div class="row"><span class="k" data-i18n="req_video_k">Vídeo</span><span class="v" data-i18n="req_video_v">Qualquer GPU com OpenGL 3.3</span></div>
+        <div class="row"><span class="k" data-i18n="req_net_k">Rede</span><span class="v" data-i18n="req_net_v">Internet (saves na nuvem + multiplayer)</span></div>
+        <div class="row"><span class="k" data-i18n="req_price_k">Preço</span><span class="v" data-i18n="req_price_v">Grátis.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="links">
+        <a href="https://github.com/vercoza218/verc-releases/releases/latest/download/Verc-windows.zip" data-i18n="nav_download">Baixar</a>
+        <a href="https://discord.gg/DhZyJXz3EM" target="_blank" rel="noopener">Discord</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  // ---- i18n do site: PT / EN / ES, troca pelas bandeiras (espelha o jogo) ----
+  const I18N = {
+    title: {
+      pt: "Verc — Escale a Torre. Só os dignos sobrevivem.",
+      en: "Verc — Climb the Tower. Only the worthy survive.",
+      es: "Verc — Escala la Torre. Solo los dignos sobreviven."
+    },
+    meta_desc: {
+      pt: "Verc — escale a Torre. Jogo grátis pra Windows. Só os dignos sobrevivem.",
+      en: "Verc — climb the Tower. Free game for Windows. Only the worthy survive.",
+      es: "Verc — escala la Torre. Juego gratis para Windows. Solo los dignos sobreviven."
+    },
+    nav_download: { pt: "Baixar", en: "Download", es: "Descargar" },
+    hero_tag: { pt: "Só os dignos sobrevivem.", en: "Only the worthy survive.", es: "Solo los dignos sobreviven." },
+    hero_btn_dl: { pt: "⬇ BAIXAR GRÁTIS", en: "⬇ DOWNLOAD FREE", es: "⬇ DESCARGAR GRATIS" },
+    hero_btn_dl_sub: { pt: "Windows · ~36 MB", en: "Windows · ~36 MB", es: "Windows · ~36 MB" },
+    hero_btn_dc: { pt: "⚔ ENTRAR NO DISCORD", en: "⚔ JOIN THE DISCORD", es: "⚔ ÚNETE AL DISCORD" },
+    hero_btn_dc_sub: { pt: "comunidade · ranking", en: "community · ranking", es: "comunidad · ranking" },
+    hero_osnote: {
+      pt: "Feito para <b>Windows 10/11</b>. O launcher atualiza o jogo sozinho a cada nova versão.",
+      en: "Made for <b>Windows 10/11</b>. The launcher updates the game automatically with every new version.",
+      es: "Hecho para <b>Windows 10/11</b>. El launcher actualiza el juego solo con cada nueva versión."
+    },
+    lore: {
+      pt: "Forças desconhecidas trouxeram toda a humanidade da Terra para dentro da <b>Torre Verc</b>. Pra salvar a espécie humana e entender o mistério da torre, os jogadores precisam alcançar o topo, se é que existe um..",
+      en: "Unknown forces brought all of humanity from Earth into the <b>Verc Tower</b>. To save the human race and unravel the tower's mystery, players must reach the top — if there even is one..",
+      es: "Fuerzas desconocidas trajeron a toda la humanidad de la Tierra al interior de la <b>Torre Verc</b>. Para salvar a la especie humana y entender el misterio de la torre, los jugadores deben alcanzar la cima, si es que existe.."
+    },
+    floors_title: { pt: "Escale a Torre", en: "Climb the Tower", es: "Escala la Torre" },
+    floors_sub: {
+      pt: "Cada zona com estética, mobs e chefes próprios — e mais sendo construído.",
+      en: "Each zone with its own look, mobs and bosses — and more being built.",
+      es: "Cada zona con su propia estética, mobs y jefes — y más en construcción."
+    },
+    floor_word: { pt: "ANDAR", en: "FLOOR", es: "PISO" },
+    floor_soon: { pt: "Em breve..", en: "Coming soon..", es: "Próximamente.." },
+    floor0_name: { pt: "Saguão da Torre", en: "Tower Lobby", es: "Vestíbulo de la Torre" },
+    floor0_sub: { pt: "O início da jornada", en: "The journey begins", es: "El inicio del viaje" },
+    floor1_name: { pt: "Floresta de Olin", en: "Olin Forest", es: "Bosque de Olin" },
+    floor1_sub: { pt: "Slimes, morcegos e ursos", en: "Slimes, bats and bears", es: "Slimes, murciélagos y osos" },
+    floor2_name: { pt: "Floresta Sombria", en: "Dark Forest", es: "Bosque Sombrío" },
+    floor2_sub: { pt: "Boss: Tecelã-Mãe", en: "Boss: Weaver-Mother", es: "Jefe: Tejedora Madre" },
+    floor3_name: { pt: "Deserto Vidro", en: "Glass Desert", es: "Desierto de Vidrio" },
+    floor3_sub: { pt: "Pirâmides e mini-chefes", en: "Pyramids and mini-bosses", es: "Pirámides y mini-jefes" },
+    floor4_name: { pt: "Biofrost", en: "Biofrost", es: "Biofrost" },
+    floor4_sub: { pt: "Boss: Dragão de Gelo", en: "Boss: Ice Dragon", es: "Jefe: Dragón de Hielo" },
+    floor5_name: { pt: "Bastião de Gelo", en: "Ice Bastion", es: "Bastión de Hielo" },
+    floor5_sub: { pt: "Capital · zona segura", en: "Capital · safe zone", es: "Capital · zona segura" },
+    band_title: { pt: "Pronto pra escalar?", en: "Ready to climb?", es: "¿Listo para escalar?" },
+    band_btn_dl: { pt: "⬇ BAIXAR O VERC", en: "⬇ DOWNLOAD VERC", es: "⬇ DESCARGAR VERC" },
+    band_btn_dc: { pt: "⚔ DISCORD", en: "⚔ DISCORD", es: "⚔ DISCORD" },
+    band_osnote: {
+      pt: "Baixe o <b>.zip</b>, extraia e rode <b>Verc.exe</b>. Crie sua conta com e-mail e comece a subir.",
+      en: "Download the <b>.zip</b>, extract it and run <b>Verc.exe</b>. Create your account with email and start climbing.",
+      es: "Descarga el <b>.zip</b>, extráelo y ejecuta <b>Verc.exe</b>. Crea tu cuenta con email y empieza a subir."
+    },
+    reqs_title: { pt: "Requisitos", en: "Requirements", es: "Requisitos" },
+    reqs_sub: { pt: "Vai rodar.", en: "It'll run.", es: "Funcionará." },
+    req_system_k: { pt: "Sistema", en: "System", es: "Sistema" },
+    req_system_v: { pt: "Windows 10 / 11 (64-bit)", en: "Windows 10 / 11 (64-bit)", es: "Windows 10 / 11 (64-bit)" },
+    req_proc_k: { pt: "Processador", en: "Processor", es: "Procesador" },
+    req_proc_v: { pt: "Dual-core 2.0 GHz+", en: "Dual-core 2.0 GHz+", es: "Dual-core 2.0 GHz+" },
+    req_mem_k: { pt: "Memória", en: "Memory", es: "Memoria" },
+    req_mem_v: { pt: "2 GB RAM", en: "2 GB RAM", es: "2 GB RAM" },
+    req_video_k: { pt: "Vídeo", en: "Video", es: "Vídeo" },
+    req_video_v: { pt: "Qualquer GPU com OpenGL 3.3", en: "Any GPU with OpenGL 3.3", es: "Cualquier GPU con OpenGL 3.3" },
+    req_net_k: { pt: "Rede", en: "Network", es: "Red" },
+    req_net_v: { pt: "Internet (saves na nuvem + multiplayer)", en: "Internet (cloud saves + multiplayer)", es: "Internet (guardado en la nube + multijugador)" },
+    req_price_k: { pt: "Preço", en: "Price", es: "Precio" },
+    req_price_v: { pt: "Grátis.", en: "Free.", es: "Gratis." }
+  };
+  const LANGS = ["pt", "en", "es"];
+
+  function applyLang(lang) {
+    if (!LANGS.includes(lang)) lang = "pt";
+    document.documentElement.lang = (lang === "pt") ? "pt-BR" : lang;
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var k = el.getAttribute("data-i18n");
+      if (I18N[k] && I18N[k][lang] != null) el.textContent = I18N[k][lang];
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+      var k = el.getAttribute("data-i18n-html");
+      if (I18N[k] && I18N[k][lang] != null) el.innerHTML = I18N[k][lang];
+    });
+    if (I18N.title[lang]) document.title = I18N.title[lang];
+    var md = document.querySelector('meta[name="description"]');
+    if (md && I18N.meta_desc[lang]) md.setAttribute("content", I18N.meta_desc[lang]);
+    document.querySelectorAll(".lang [data-lang]").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-lang") === lang);
+    });
+    try { localStorage.setItem("verc_lang", lang); } catch (e) {}
+  }
+
+  function detectLang() {
+    try { var s = localStorage.getItem("verc_lang"); if (s && LANGS.includes(s)) return s; } catch (e) {}
+    var n = (navigator.language || "pt").toLowerCase();
+    if (n.indexOf("es") === 0) return "es";
+    if (n.indexOf("en") === 0) return "en";
+    return "pt"; // default: jogo é PT-first
+  }
+
+  document.querySelectorAll(".lang [data-lang]").forEach(function (b) {
+    b.addEventListener("click", function () { applyLang(b.getAttribute("data-lang")); });
+  });
+  applyLang(detectLang());
+  </script>
+</body>
+</html>
